@@ -1,0 +1,161 @@
+---
+# The bare domain name which represents your Matrix identity.
+# Matrix user IDs for your server will be of the form (`@alice:example.com`).
+#
+# Note: this playbook does not touch the server referenced here.
+# Installation happens on another server ("matrix.example.com", see `matrix_server_fqn_matrix`).
+#
+# If you've deployed using the wrong domain, you'll have to run the Uninstalling step,
+# because you can't change the Domain after deployment.
+matrix_domain: domain.com
+
+# The Matrix homeserver software to install.
+# See:
+#  - `roles/custom/matrix-base/defaults/main.yml` for valid options
+#  - the `docs/configuring-playbook-IMPLEMENTATION_NAME.md` documentation page, if one is available for your implementation choice
+#
+# By default, we use Synapse, because it's the only full-featured Matrix server at the moment.
+#
+# Note that the homeserver implementation of a server will not be able to be changed without data loss.
+matrix_homeserver_implementation: synapse
+
+# A secret used as a base, for generating various other secrets.
+# You can put any string here, but generating a strong one is preferred. You can create one with a command like `pwgen -s 64 1`.
+matrix_homeserver_generic_secret_key: 'changethis'
+
+# By default, the playbook manages its own Traefik (https://doc.traefik.io/traefik/) reverse-proxy server.
+# It will retrieve SSL certificates for you on-demand and forward requests to all other components.
+# For alternatives, see `docs/configuring-playbook-own-webserver.md`.
+matrix_playbook_reverse_proxy_type: playbook-managed-traefik
+traefik_config_certificatesResolvers_acme_enabled: false
+traefik_ssl_dir_enabled: true
+matrix_playbook_ssl_enabled: true
+traefik_config_entrypoint_web_secure_enabled: false
+traefik_container_web_host_bind_port: '127.0.0.1:81'
+traefik_config_entrypoint_web_forwardedHeaders_insecure: true
+matrix_playbook_public_matrix_federation_api_traefik_entrypoint_host_bind_port: '127.0.0.1:8449'
+matrix_playbook_public_matrix_federation_api_traefik_entrypoint_config_http3_enabled: false
+matrix_playbook_public_matrix_federation_api_traefik_entrypoint_config_custom:
+  forwardedHeaders:
+    insecure: true
+   #trustedIPs: [ '127.0.0.1:2019' ]
+traefik_provider_configuration_extension_yaml:
+  tls:
+    certificates:
+      - certFile: /ssl/cert.pem
+        keyFile: /ssl/privkey.pem
+    stores:
+      default:
+        defaultCertificate:
+          certFile: /ssl/cert.pem
+          keyFile: /ssl/privkey.pem
+#traefik_dashboard_enabled: true
+#traefik_dashboard_hostname: "{{ matrix_server_fqn_matrix }}"
+#traefik_dashboard_basicauth_enabled: true
+#traefik_dashboard_basicauth_user: admin
+#traefik_dashboard_basicauth_password: changeme
+# Controls whether container networks will be created with IPv6 support.
+#
+# If you also have IPv6 support on your server/network and AAAA DNS records pointing to the server,
+# enabling this will effectively give you full public IPv6 connectivity (powered by NAT66).
+#
+# We recommend leaving this enabled even if you don't currently have IPv6 connectivity on your server/network.
+# This way, once you eventually get IPv6 connectivity, you won't have to change anything (besides DNS records).
+#
+# Flipping this setting later on requires manual work (stopping services, deleting and recreating all container networks).
+#
+# In the future, this setting will likely default to `true`, so if you really want IPv6 disabled, explicitly set this to `false`.
+#
+# People managing Docker themselves and running an older Docker version will need additional configuration.
+#
+# Learn more in `docs/configuring-ipv6.md`.
+devture_systemd_docker_base_ipv6_enabled: false
+
+# A Postgres password to use for the superuser Postgres user (called `matrix` by default).
+#
+# The playbook creates additional Postgres users and databases (one for each enabled service) using this superuser account.
+#
+# Changing this value subsequently requires manual work.
+# The value used here must be shorter than 100 characters.
+# Use pwngen
+postgres_connection_password: 'putyourpasswordhere'
+
+# By default, we configure coturn's external IP address using the value specified for `ansible_host` in your `inventory/hosts` file.
+# If this value is an external IP address, you can skip this section.
+#
+# If `ansible_host` is not the server's external IP address, you have 2 choices:
+# 1. Uncomment the line below, to allow IP address auto-detection to happen (more on this below)
+# 2. Uncomment and adjust the line below to specify an IP address manually
+#
+# By default, auto-detection will be attempted using the `https://ifconfig.co/json` API.
+# Default values for this are specified in `matrix_coturn_turn_external_ip_address_auto_detection_*` variables in the coturn role
+# (see `roles/custom/matrix-coturn/defaults/main.yml`).
+#
+# If your server has multiple IP addresses, you may define them in another variable which allows a list of addresses.
+# Example: `matrix_coturn_turn_external_ip_addresses: ['1.2.3.4', '4.5.6.7']`
+#
+# matrix_coturn_turn_external_ip_address: ''
+matrix_static_files_container_labels_base_domain_enabled: true
+matrix_synapse_enable_registration: true
+matrix_synapse_admin_enabled: true
+#matrix_synapse_registrations_require_3pid: ['email']
+matrix_registration_admin_secret: "nezah4oikaiqu7oiyae3EiM7An0lias6ohv4aChah2pu6oht7Zei1Ahquahchaarp"
+registration_requires_token: true
+#matrix_synapse_enable_registration_captcha: true
+#matrix_synapse_recaptcha_public_key: 'google recaptcha v2'
+#matrix_synapse_recaptcha_private_key: 'google recaptcha v2'
+
+#User Verify#
+#matrix_user_verification_service_enabled: true
+#matrix_user_verification_service_uvs_access_token: "syt_ change or comment me out"
+#matrix_user_verification_service_uvs_require_auth: false
+
+#Jitsi Voice#
+jitsi_web_config_resolution_width_ideal_and_max:  1920
+jitsi_web_config_resolution_height_ideal_and_max: 1080
+jitsi_enabled: true
+jitsi_enable_hsts: true
+jitsi_enable_lobby: true
+jitsi_disable_gravatar: false
+jitsi_hostname: "jitsi.domain.com"
+jitsi_prosody_max_participants: 64
+jitsi_prosody_container_jvb_host_bind_port: 5222
+jitsi_web_custom_config_extension:
+ config.enableLayerSuspension = true;
+  config.disableAudioLevels = true;
+  config.channelLastN = 8;
+matrix_rtc_enabled: true
+
+#Jitsi Authentication#
+# I've disabled by default due to error but can safely comment back in after first install#
+#jitsi_enable_auth: true
+#jitsi_prosody_auth_internal_accounts:
+#admin sign in for private calls between admin and moderators#
+#probably a good idea to change these passwords every so often for security purposes
+#  - username: "admin"
+#    password: "mae6iezoupaecishahT7eesheefaidaehahBa2kaih4lei8ukeip3ema1ofoos8n"
+#  - username: "user"
+#    password: "StrongPasswordsFTW"
+
+#Server Metrics#
+#prometheus_enabled: true
+#grafana_enabled: true
+
+#grafana_default_admin_user: ""
+#grafana_default_admin_password: ""
+
+#Server Side Themes For Element Client#
+matrix_client_element_themes_enabled: true
+
+#Rate Limiting#
+
+matrix_synapse_rc_message:
+  per_second: 0.2
+  burst_count: 7
+
+matrix_synapse_rc_registration:
+  per_second: 0.17
+
+#File Upload Size Limit#
+
+matrix_synapse_max_upload_size_mb: 12
