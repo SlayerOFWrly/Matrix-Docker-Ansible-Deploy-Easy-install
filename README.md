@@ -1,4 +1,3 @@
-### Fork by disk mostly for personal use
 #### ⚠️ edit the passwords in vars.yml ⚠️
 - Simplified Configs: Config files are streamlined and easy to deploy after minor edits, utilizing Caddy as the preferred reverse proxy over Traefik.
 - Jitsi Integration: Uses Jitsi for audio and screen-sharing (capped at 30fps) as a replacement for the native Element Call, which requires federation. Use /addwidget in Element to add Jitsi voice rooms.
