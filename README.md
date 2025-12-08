@@ -1,3 +1,5 @@
+### Fork by disk mostly for personal use
+#### ⚠️ edit the passwords in vars.yml ⚠️
 A revisit and general clean-up of the config files as well as some brief documentation added to the configs to help assist you in the process, not a lot but enough to hopefully get you through install and a working server.
 
 These configs after a few small edits should be easy enough to paste into the required directories along with your own SSL certs from your domain, theoretically you should have a server booted in about 15-25minutes tops. A much needed addition for those who would post on forum boards stuck with initial installs due to long and lengthy Github documentations.
