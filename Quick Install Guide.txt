@@ -32,7 +32,7 @@ cd matrix-docker-ansible-deploy
 
 mkdir -p inventory/host_vars/matrix.example.com where example.com is your "base domain"
 
-use the matrix included config files and paste the contents into these files below
+use the matrix included config files bundled with this guide and paste the contents into these files below
 
 nano inventory/host_vars/matrix.example.com/vars.yml
 
@@ -58,9 +58,9 @@ git clone https://github.com/mother-of-all-self-hosting/mash-playbook
 
 cd mash-playbook
 
-mkdir inventory/host_vars/mash.example.com (replace example.com with your base domain name)
+mkdir -p inventory/host_vars/mash.example.com (replace example.com with your base domain name)
 
-use the mash included config files and paste the contents into these files below
+use the mash included config files bundled with this guide and paste the contents into these files below
 
 nano inventory/host_vars/mash.example.com (replace example.com with your base domain name)
 
@@ -122,7 +122,7 @@ Type   Host               Answer
 CNAME  jitsi.domain.com   matrix.domain.com
 
 Type   Host                                         Answer                           Priority
-SRV    _matrix._tcp.domain.com..domain.com   0 443 matrix.domain.com      10
+SRV    _matrix._tcp.domain.com.domain.com   0 443 matrix.domain.com      10
 
 Replacing domain.com with your base domain. These host names are stringent so they must be formatted like so
 
