@@ -54,7 +54,7 @@ now we move those ssl files to "/matrix/traefik/ssl" paste all 3 files here, and
 
 Mash Playbook install:
 
-git clone https://github.com/mother-of-all-self-hosting/mash-playbook/tree/main
+git clone https://github.com/mother-of-all-self-hosting/mash-playbook
 
 cd mash-playbook
 
@@ -122,7 +122,7 @@ Type   Host               Answer
 CNAME  jitsi.domain.com   matrix.domain.com
 
 Type   Host                                         Answer                           Priority
-SRV    _matrix._tcp.portalchat.app.portalchat.app   0 443 matrix.portalchat.app      10
+SRV    _matrix._tcp.domain.com..domain.com   0 443 matrix.domain.com      10
 
 Replacing domain.com with your base domain. These host names are stringent so they must be formatted like so
 
