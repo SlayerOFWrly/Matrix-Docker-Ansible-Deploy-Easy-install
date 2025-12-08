@@ -1,0 +1,158 @@
+install VMware Workstation 25.02,
+
+Setup bridged non replicate host mode in settings VMware,
+
+boot Ubuntu 24.04.img
+
+run through initial setup,
+
+boot into your fresh install.
+
+Setup and configure your chosen Domain, examples included with the release of this walkthrough
+
+Install and setup phase:
+
+Download your domains ssl certs, (publickey.pem, privatekey.pem and certs.domain.pem)
+
+rename publickey.pem to pubkey.pem, privkey.pem, and lastly certs.pem, we will need to move these at the end of the matrix matrix ansible install.
+
+setup your domain records and portforwarding will be at the end of this document for formatting sake and you must do this prior to install or you'll face a compilation error
+
+Time for install
+
+su
+
+apt install just ansible git thunar pwgen
+
+cd /root
+
+git clone https://github.com/spantaleev/matrix-docker-ansible-deploy
+
+cd matrix-docker-ansible-deploy
+
+mkdir -p inventory/host_vars/matrix.example.com where example.com is your "base domain"
+
+use the matrix included config files and paste the contents into these files below
+
+nano inventory/host_vars/matrix.example.com/vars.yml
+
+nano inventory/hosts
+
+and now we can run
+
+just update
+
+ansible-playbook -i inventory/hosts setup.yml --tags=install-all,ensure-matrix-users-created,start --connection=local
+
+and lastly for autostart upon boot we run
+
+just install-all --connection=local
+
+now we move those ssl files to "/matrix/traefik/ssl" paste all 3 files here, and now we create a folder named "domain" where we move pubkey.pem into that new folder
+
+
+
+Mash Playbook install:
+
+git clone https://github.com/mother-of-all-self-hosting/mash-playbook/tree/main
+
+cd mash-playbook
+
+mkdir inventory/host_vars/mash.example.com (replace example.com with your base domain name)
+
+use the mash included config files and paste the contents into these files below
+
+nano inventory/host_vars/mash.example.com (replace example.com with your base domain name)
+
+nano inventory/hosts
+
+and again now we can run
+
+just update
+
+and lastly for autoboot
+
+just install-all --connection=local
+
+
+
+
+And the final piece of the puzzle our reverse proxy, "Caddy"
+
+Now it's up to you, disable proxy autostart by default with caddy by inputting "systemctl disable caddy" and then replace "disable" with "kill" or you can leave it to autostart :)
+
+back to our matrix folder from earlier
+
+cd ..
+
+apt install caddy
+
+use the Caddyfile config file included with this guide and paste the contents into the file below
+
+nano Caddyfile
+
+change the domain address for each codeblock
+
+and lastly to complete install,
+
+caddy run
+
+
+
+Ports to forward from router. Since we are using bridged mode the IP to be assigned for open ports will be your host system IP,
+
+ifconfig
+
+and now the ports you will need to forward to that IP are as follows
+
+80, 443, 10000(UDP), 9090, 5222, 8008, 5432, 8080, and lastly if you plan to use email registration you'll need 587 (SMTP)
+
+Domain setup consists of type, host and Answer, as follows below
+
+Type   Host               Answer
+A      matrix.domain.com  Public IPV4 here
+
+Type   Host               Answer
+A      mash.domain.com    Public IPV4 here
+
+Type   Host               Answer
+CNAME  element.domain.com matrix.domain.com
+
+Type   Host               Answer
+CNAME  jitsi.domain.com   matrix.domain.com
+
+Type   Host                                         Answer                           Priority
+SRV    _matrix._tcp.portalchat.app.portalchat.app   0 443 matrix.portalchat.app      10
+
+Replacing domain.com with your base domain. These host names are stringent so they must be formatted like so
+
+
+
+
+
+
+
+Added note, in order to use certain tools like "synapse-admin"
+you will need to register a user as admin either before your account creation or after. I will include how to do this after at the end of this guide for formatting
+
+
+Adding/Removing Administrator privileges to an existing user
+Adding/Removing Administrator privileges to an existing user in Synapse
+ 
+To change the admin privileges for a user in Synapse's local database, you need to run an SQL query like this against the synapse database:
+ 
+UPDATE users SET admin=ADMIN_VALUE WHERE name = '@USER:example.com';
+ 
+where:
+ 
+     ADMIN_VALUE being either 0 (regular user) or 1 (admin)
+     USER and example.com pointing to a valid user on your server
+
+If you're using the integrated Postgres server and not an external Postgres server, you can launch a Postgres into the synapse database by:
+ 
+     running /matrix/postgres/bin/cli - to launch psql
+     running \c synapse - to change to the synapse database
+ 
+You can then proceed to run the query above.
+ 
+Note: directly modifying the raw data of Synapse (or any other software) could cause the software to break. You've been warned!

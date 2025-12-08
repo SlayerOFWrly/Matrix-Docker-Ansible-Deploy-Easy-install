@@ -1,0 +1,135 @@
+#stream and user.domain.com are for Owncast, hometown is a unfederated fork of mastodon (RIP) and you can update these domain headers to be whatever you would like, both owncast and mastodon installs are not included in this guide, I left these in to encourage others to stop using Twitch and other forms of social media in which both you and your fans are the product, nothing is ever truly free. Mastodon especially offers a great oppertunity to network with your fans without all the nose from grifters directly on the platform, encouraging your fans to share <3 
+#Everything is pre configured all you have to do is change the domain.com with your real domain, the headers for your subdomains are customisable with the exception of matrix, element and jitsi, those are header specific and in changing those breaks things until they are reverted back to matrix, element, jitsi. Each application is different in domain setup with requirements, this guide dos not cover that, only a quick install.
+
+stream.domain.com {
+tls /matrix/traefik/ssl/cert.pem /matrix/traefik/ssl/privkey.pem
+        encode zstd gzip
+        reverse_proxy localhost:8080 {
+        }
+}
+
+matrix.domain.com {
+        tls /matrix/traefik/ssl/cert.pem /matrix/traefik/ssl/privkey.pem
+        encode zstd gzip
+        handle {
+        reverse_proxy localhost:81  {
+               header_up X-Forwarded-Port {http.request.port}
+               header_up X-Forwarded-TlsProto {tls_protocol}
+               header_up X-Forwarded-TlsCipher {tls_cipher}
+               header_up X-Forwarded-HttpsProto {proto}
+        }
+  }
+}
+
+matrix.domain.com:8448 {
+    handle {
+        encode zstd gzip
+        reverse_proxy 127.0.0.1:8449 {
+               header_up X-Forwarded-Port {http.request.port}
+               header_up X-Forwarded-TlsProto {tls_protocol}
+               header_up X-Forwarded-TlsCipher {tls_cipher}
+               header_up X-Forwarded-HttpsProto {proto}
+        }
+    }
+}
+
+element.domain.com {
+        tls /matrix/traefik/ssl/cert.pem /matrix/traefik/ssl/privkey.pem
+
+  handle {
+        encode zstd gzip
+
+        reverse_proxy localhost:81  {
+               header_up X-Forwarded-Port {http.request.port}
+               header_up X-Forwarded-TlsProto {tls_protocol}
+               header_up X-Forwarded-TlsCipher {tls_cipher}
+               header_up X-Forwarded-HttpsProto {proto}
+        }
+  }
+}
+
+jitsi.domain.com {
+        tls /matrix/traefik/ssl/cert.pem /matrix/traefik/ssl/privkey.pem
+
+  handle {
+        encode zstd gzip
+
+        reverse_proxy localhost:81  {
+               header_up X-Forwarded-Port {http.request.port}
+               header_up X-Forwarded-TlsProto {tls_protocol}
+               header_up X-Forwarded-TlsCipher {tls_cipher}
+               header_up X-Forwarded-HttpsProto {proto}
+        }
+  }
+}
+
+#user being the name of your owncast username and change domain.com to your real domain
+user.domain.com {
+	root * /var/www/user.domain.com
+	encode gzip
+	file_server {
+		hide .git
+	}
+
+header {
+	?Cache-Control "max-age-1800"
+	}
+}
+
+
+hometown.domain.com {
+tls /matrix/traefik/ssl/cert.pem /matrix/traefik/ssl/privkey.pem
+        @local {
+                file
+                not path /
+        }
+        @streaming {
+                path /api/v1/streaming /api/v1/streaming/*
+        }
+        @cache_control {
+                path_regexp ^/(emoji|packs|/system/accounts/avatars|/system/media_attachments/files)
+        }
+
+        root * /home/mastodon/live/public
+
+        log {
+                output file /var/log/caddy/mastodon.log
+        }
+
+        handle_errors {
+                rewrite 500.html
+                file_server
+        }
+
+        header {
+                Strict-Transport-Security "max-age=31536000"
+        }
+        header /sw.js Cache-Control "public, max-age=0"
+        header @cache_control Cache-Control "public, max-age=31536000, immutable"
+
+        handle @local {
+                file_server
+        }
+
+        reverse_proxy @streaming {
+                to http://localhost:4000
+                header_up X-Forwarded-Port 443
+                header_up X-Forwarded-Proto https
+
+                transport http {
+                        keepalive 5s
+                        keepalive_idle_conns 10
+                }
+        }
+
+        reverse_proxy {
+                to http://localhost:3000
+                header_up X-Forwarded-Port 443
+                header_up X-Forwarded-Proto https
+
+                transport http {
+                        keepalive 5s
+                        keepalive_idle_conns 10
+                }
+        }
+}
