@@ -101,7 +101,8 @@ matrix_synapse_admin_enabled: true
 #matrix_synapse_registrations_require_3pid: ['email']
 matrix_registration_admin_secret: "nezah4oikaiqu7oiyae3EiM7An0lias6ohv4aChah2pu6oht7Zei1Ahquahchaarp"
 registration_requires_token: true
-#matrix_synapse_enable_registration_captcha: true
+matrix_synapse_enable_registration_captcha: true
+#You will need to setup either the email above or the captcha below to allow for sign-up
 #matrix_synapse_recaptcha_public_key: 'google recaptcha v2'
 #matrix_synapse_recaptcha_private_key: 'google recaptcha v2'
 
